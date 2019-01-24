@@ -13,7 +13,7 @@ function Input() {
   ) => {
     e.preventDefault();
     load(
-      axios.get(`/.netlify/functions/github?repo=${search}`) // TODO: handle bad on client
+      axios.get(`/.netlify/functions/github?repo=${search}`).then(resp => console.log(resp.data)) // TODO: handle bad on client
     );
   };
 
