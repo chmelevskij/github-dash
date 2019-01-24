@@ -1,47 +1,36 @@
 import * as React from 'react';
-import logo from './logo.svg';
+import axios from 'axios';
 import './App.css';
 
 import { useLoading } from '@swyx/hooks';
 
-function LambdaDemo() {
+function Input() {
   const [isLoading, load] = useLoading();
-  const [msg, setMsg] = React.useState(null);
-  const handleClick = (api: string) => (
+  const [search, setSearch] = React.useState('');
+
+  const handleClick = (
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
     e.preventDefault();
     load(
-      fetch('/.netlify/functions/' + api)
-        .then(response => response.json())
-        .then(json => setMsg(json.msg))
+      axios.get(`/.netlify/functions/github?repo=${search}`) // TODO: handle bad on client
     );
   };
 
   return (
-    <p>
-      <button onClick={handleClick('hello')}>
-        {isLoading ? 'Loading...' : 'Call Lambda'}
+    <div>
+      <input type="text" value={search} onChange={({ target }) => setSearch(target.value)}/>
+      <button onClick={handleClick}>
+        {isLoading ? 'Loading...' : 'Search'}
       </button>
-      <button onClick={handleClick('async-chuck-norris')}>
-        {isLoading ? 'Loading...' : 'Call Async Lambda'}
-      </button>
-      <br />
-      <span>{msg}</span>
-    </p>
+    </div>
   );
 }
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <LambdaDemo />
-      </header>
+    <Input />
     </div>
   );
 }
