@@ -7,7 +7,6 @@ const client = new ApolloClient({
   uri: 'https://api.github.com/graphql',
   headers: {
     Authorization: `bearer ${process.env.GITHUB_TOKEN}`,
-    Accept: 'application/vnd.github.hawkgirl-preview+json',
   },
   fetch: fetch as any,
 });
@@ -15,10 +14,44 @@ const client = new ApolloClient({
 const githubQuery = gql`
 query Github($owner: String!, $name: String!) {
   repository(owner: $owner name: $name) {
-		forks(first: 10) {
-      nodes {
-        nameWithOwner
+    releases { totalCount }
+
+    ref(qualifiedName: "master"){
+      target {
+        ...on Commit {
+          treeUrl
+          history { totalCount }
+        }
       }
+    }
+    issues{ totalCount }
+    stargazers { totalCount }
+    watchers { totalCount }
+    pullRequests{ totalCount }
+    forks{ totalCount }
+    assignableUsers { totalCount }
+    commitComments{ totalCount }
+    defaultBranchRef { name }
+    labels(first:100) {
+      totalCount
+      nodes {
+        name
+        color
+      }
+    }
+    languages(first:50) {
+      totalSize
+      nodes {
+        name
+        color
+      }
+    }
+    diskUsage
+    createdAt
+    updatedAt
+    primaryLanguage {
+      name
+      color
     }
   }
 }
