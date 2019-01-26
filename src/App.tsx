@@ -2,9 +2,9 @@ import * as React from 'react';
 import axios from 'axios';
 import { useLoading } from '@swyx/hooks';
 import * as R from 'ramda';
+import styled from 'styled-components';
 
 import { getRepository, filterTotalCounts } from './utils';
-import './App.css';
 
 interface NumberBadgeProps {
   number: number;
@@ -12,12 +12,57 @@ interface NumberBadgeProps {
   emoji?: string;
 }
 
-const NumberBadge: React.SFC<NumberBadgeProps> = ({ title, number}) => (
-  <div>
-    <span>{number}</span>
-    <span>{title}</span>
-  </div>
+const BadgeContainer = styled.div`
+  border-radius: 5px;
+  box-shadow: 5px 5px 30px 6px var(--colorBGDark);
+  padding: 1rem;
+  max-height: 50px;
+  background-color: var(--colorBGWhite);
+`
+
+const BadgeNumber = styled.div`
+  font-size: 1.5rem;
+  font-weight: 200;
+`;
+
+const BadgeTitle = styled.div`
+  opacity: 0.5;
+`;
+
+const NumberBadge: React.SFC<NumberBadgeProps> = ({ title, number }) => (
+  <BadgeContainer>
+    <BadgeNumber>{number}</BadgeNumber>
+    <BadgeTitle>{title}</BadgeTitle>
+  </BadgeContainer>
 );
+
+const SearchContainer = styled.div`
+  align-self: center;
+  justify-self: center;
+  display: flex;
+  box-shadow: 5px 5px 30px 6px var(--colorBGDark);
+`;
+
+const SearchInput = styled.input.attrs({
+  type: 'text',
+})`
+  border: none;
+  padding: 1rem;
+  font-size: 2rem;
+  border-top-left-radius: 1rem;
+  border-bottom-left-radius: 1rem;
+  font-weight: 200;
+  letter-spacing: 2px;
+`;
+
+const SearchButton = styled.button.attrs({
+  type: 'button',
+})`
+  border-top-right-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  width: 150px;
+  font-size: 2rem;
+`;
 
 interface SearchProps {
   onLoaded: (github: any) => void;
@@ -38,23 +83,32 @@ const Search: React.SFC<SearchProps> = ({ onLoaded }) => {
   };
 
   return (
-    <div>
-      <input type="text" value={search} onChange={({ target }) => setSearch(target.value)} />
-      <button onClick={handleClick}>
-        {isLoading ? 'Loading...' : 'Search'}
-      </button>
-    </div>
+    <SearchContainer>
+      <SearchInput
+        placeholder="Github url..."
+        value={search}
+        onChange={({ target }) => setSearch(target.value)} />
+      <SearchButton onClick={handleClick}>
+        {isLoading ? 'Loading...' : 'GO'}
+      </SearchButton>
+    </SearchContainer>
   );
 }
+
+const Numbers = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 170px);
+  grid-gap: 1rem;
+  justify-content: center;
+`;
 
 function App() {
   const [github, setGithub] = React.useState({});
   const totalCounts = filterTotalCounts(github)
-  console.log(totalCounts)
   return (
     <div className="App">
       <Search onLoaded={setGithub} />
-      <div>
+      <Numbers>
         {
           R.pipe(
             R.mapObjIndexed<{ totalCount: number }, JSX.Element, string>((value, title) => (
@@ -63,9 +117,7 @@ function App() {
             R.values
           )(totalCounts)
         }
-      </div>
-      <div>
-      </div>
+      </Numbers>
     </div>
   );
 }

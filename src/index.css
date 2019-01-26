@@ -1,3 +1,9 @@
+:root {
+  --colorBGDark: #e5e5ff;
+  --colorBGMedium: #ececf9;
+  --colorBGWhite: #ffffff;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -6,15 +12,15 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  min-width: 100vw;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-path {
-  stroke: white;
-  stroke-width: 0.5px;
-  fill: black;
+.App {
+  min-width: 100vw;
+  min-height: 100vh;
+  display: grid;
+  background-color: var(--colorBGMedium);
+  padding: 2rem;
+  box-sizing: border-box;
 }
