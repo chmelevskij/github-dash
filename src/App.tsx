@@ -1,10 +1,29 @@
 import * as React from 'react';
 import axios from 'axios';
+import { useLoading } from '@swyx/hooks';
+import * as R from 'ramda';
+
+import { getTotalCounts, getRepository, filterTotalCounts } from './utils';
 import './App.css';
 
-import { useLoading } from '@swyx/hooks';
+interface NumberBadgeProps {
+  number: number;
+  title?: string;
+  emoji?: string;
+}
 
-function Input() {
+const NumberBadge: React.SFC<NumberBadgeProps> = ({ title, number}) => (
+  <div>
+    <span>{number}</span>
+    <span>{title}</span>
+  </div>
+);
+
+interface SearchProps {
+  onLoaded: (github: any) => void;
+}
+
+const Search: React.SFC<SearchProps> = ({ onLoaded }) => {
   const [isLoading, load] = useLoading();
   const [search, setSearch] = React.useState('');
 
@@ -13,13 +32,14 @@ function Input() {
   ) => {
     e.preventDefault();
     load(
-      axios.get(`/.netlify/functions/github?repo=${search}`).then(resp => console.log(resp.data)) // TODO: handle bad on client
+      axios.get(`/.netlify/functions/github?repo=${search}`)
+        .then(R.pipe(getRepository, onLoaded)) // TODO: handle bad on client
     );
   };
 
   return (
     <div>
-      <input type="text" value={search} onChange={({ target }) => setSearch(target.value)}/>
+      <input type="text" value={search} onChange={({ target }) => setSearch(target.value)} />
       <button onClick={handleClick}>
         {isLoading ? 'Loading...' : 'Search'}
       </button>
@@ -28,9 +48,24 @@ function Input() {
 }
 
 function App() {
+  const [github, setGithub] = React.useState({});
+  const totalCounts = filterTotalCounts(github)
+  console.log(totalCounts)
   return (
     <div className="App">
-    <Input />
+      <Search onLoaded={setGithub} />
+      <div>
+        {
+          R.pipe(
+            R.mapObjIndexed<{ totalCount: number }, JSX.Element, string>((value, title) => (
+              <NumberBadge key={title} title={title} number={value.totalCount} />
+            )),
+            R.values
+          )(totalCounts)
+        }
+      </div>
+      <div>
+      </div>
     </div>
   );
 }
