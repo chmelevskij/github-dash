@@ -4,10 +4,8 @@
   "private": true,
   "dependencies": {
     "@swyx/hooks": "^0.0.3",
-    "@types/d3": "^5.7.0",
     "apollo-boost": "^0.1.27",
     "axios": "^0.18.0",
-    "d3": "^5.7.0",
     "graphql": "^14.1.1",
     "node-fetch": "^2.3.0",
     "react": "^16.8.0-alpha.0",
