@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useLoading } from '@swyx/hooks';
 import * as R from 'ramda';
 
-import { getTotalCounts, getRepository, filterTotalCounts } from './utils';
+import { getRepository, filterTotalCounts } from './utils';
 import './App.css';
 
 interface NumberBadgeProps {
