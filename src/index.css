@@ -20,6 +20,7 @@ body {
   min-width: 100vw;
   min-height: 100vh;
   display: grid;
+  grid-row-gap: 1rem;
   background-color: var(--colorBGMedium);
   padding: 2rem;
   box-sizing: border-box;

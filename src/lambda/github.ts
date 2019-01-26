@@ -37,6 +37,12 @@ query Github($owner: String!, $name: String!) {
       nodes {
         name
         color
+        pullRequests {
+          totalCount
+        }
+        issues {
+          totalCount
+        }
       }
     }
     languages(first:50) {

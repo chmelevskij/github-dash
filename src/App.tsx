@@ -102,9 +102,66 @@ const Numbers = styled.div`
   justify-content: center;
 `;
 
+const Labels = styled(Numbers)`
+  grid-template-columns: repeat(auto-fit, 250px);
+`;
+interface LabelNode {
+  name: string;
+  color: string;
+  issues: {
+    totalCount: number;
+  }
+  pullRequests: {
+    totalCount: number;
+  }
+}
+
+const Label = styled('div')<{
+  backgroundColor: string;
+}>`
+  background-color: ${({ backgroundColor }) => `#${backgroundColor}`};
+  padding: 1rem;
+  border-radius: 5px;
+  box-shadow: 5px 5px 30px 6px var(--colorBGDark);
+  position: relative;
+  min-height: 50px;
+`;
+
+const LabelPrIssueContainer = styled.div`
+ width: 100%;
+ position: absolute;
+ bottom: 0;
+ margin: 0 -1rem;
+ display: flex;
+ height: 1.5rem;
+
+ & :first-child {
+  border-bottom-left-radius: 5px;
+ }
+
+ & :last-child {
+  border-bottom-right-radius: 5px;
+ }
+`;
+
+const LabelPrIssueContainerInfo = styled(LabelPrIssueContainer)`
+  justify-content: space-around;
+  align-items: center;
+`;
+const LabelBar = styled('div')<{ backgroundColor: string, width: number }>`
+  width: ${({ width }) => width}%;
+  background-color: ${({ backgroundColor }) => backgroundColor};
+`;
+
+const LabelName = styled.span`
+  font-weight: 600;
+`;
+
+const getPercentage = (v1: number, v2: number) => (v1 / (v1 + v2) * 100)
 function App() {
   const [github, setGithub] = React.useState({});
   const totalCounts = filterTotalCounts(github)
+  const labels = R.pathOr<[], Array<LabelNode>>([], ['labels', 'nodes'], github);
   return (
     <div className="App">
       <Search onLoaded={setGithub} />
@@ -118,6 +175,35 @@ function App() {
           )(totalCounts)
         }
       </Numbers>
+      <Labels>
+        {
+          R.map(({ color, name, issues, pullRequests }) =>
+            <Label key={name} backgroundColor={color}>
+              <LabelName>
+              {name}
+              </LabelName>
+              <LabelPrIssueContainer >
+                <LabelBar
+                  backgroundColor="#cb2431"
+                  width={getPercentage(issues.totalCount, pullRequests.totalCount)}
+                />
+                <LabelBar
+                  backgroundColor="#2cbe4e"
+                  width={getPercentage(pullRequests.totalCount, issues.totalCount)}
+                />
+              </LabelPrIssueContainer>
+              <LabelPrIssueContainerInfo>
+                <span style={{ color: 'white' }}>
+                {issues.totalCount} issues
+                </span>
+                <span style={{ color: 'white' }}>
+                {pullRequests.totalCount} prs
+                </span>
+              </LabelPrIssueContainerInfo>
+            </Label>
+            , labels)
+        }
+      </Labels>
     </div>
   );
 }
