@@ -168,8 +168,10 @@ function App() {
       <Numbers>
         {
           R.pipe(
-            R.mapObjIndexed<{ totalCount: number }, JSX.Element, string>((value, title) => (
-              <NumberBadge key={title} title={title} number={value.totalCount} />
+            R.toPairs,
+            R.sortBy(R.path([1, 'totalCount']) as any),
+            R.map<[string, { totalCount: number }], JSX.Element>(([title, { totalCount }]) => (
+              <NumberBadge key={title} title={title} number={totalCount} />
             )),
             R.values
           )(totalCounts)
@@ -180,7 +182,7 @@ function App() {
           R.map(({ color, name, issues, pullRequests }) =>
             <Label key={name} backgroundColor={color}>
               <LabelName>
-              {name}
+                {name}
               </LabelName>
               <LabelPrIssueContainer >
                 <LabelBar
@@ -194,10 +196,10 @@ function App() {
               </LabelPrIssueContainer>
               <LabelPrIssueContainerInfo>
                 <span style={{ color: 'white' }}>
-                {issues.totalCount} issues
+                  {issues.totalCount} issues
                 </span>
                 <span style={{ color: 'white' }}>
-                {pullRequests.totalCount} prs
+                  {pullRequests.totalCount} prs
                 </span>
               </LabelPrIssueContainerInfo>
             </Label>

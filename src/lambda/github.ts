@@ -3,27 +3,43 @@ import { Context, APIGatewayEvent } from 'aws-lambda';
 import { URL } from 'url';
 import ApolloClient, { gql } from 'apollo-boost';
 
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
 const client = new ApolloClient({
   uri: 'https://api.github.com/graphql',
   headers: {
-    Authorization: `bearer ${process.env.GITHUB_TOKEN}`,
+    Authorization: `bearer ${GITHUB_TOKEN}`,
   },
   fetch: fetch as any,
 });
 
 const githubQuery = gql`
-query Github($owner: String!, $name: String!) {
+query Github($owner: String!, $name: String!, $until: GitTimestamp!) {
   repository(owner: $owner name: $name) {
     releases { totalCount }
 
     ref(qualifiedName: "master"){
       target {
         ...on Commit {
-          treeUrl
-          history { totalCount }
+          history(until: $until, first:50){
+            totalCount
+            nodes {
+              additions
+              deletions
+              changedFiles
+              committedDate
+              pushedDate
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
         }
       }
     }
+
     issues{ totalCount }
     stargazers { totalCount }
     watchers { totalCount }
@@ -32,6 +48,7 @@ query Github($owner: String!, $name: String!) {
     assignableUsers { totalCount }
     commitComments{ totalCount }
     defaultBranchRef { name }
+
     labels(first:100) {
       totalCount
       nodes {
@@ -43,13 +60,6 @@ query Github($owner: String!, $name: String!) {
         issues {
           totalCount
         }
-      }
-    }
-    languages(first:50) {
-      totalSize
-      nodes {
-        name
-        color
       }
     }
     diskUsage
@@ -68,19 +78,27 @@ export async function handler(event: APIGatewayEvent, context: Context) {
     // TODO: validation
     const [, owner, name] = new URL(event.queryStringParameters.repo).pathname.split('/');
 
-    const repo = await client.query({
-      // TODO: pagination
+    const { data } = await client.query({
       query: githubQuery,
       variables: {
         owner,
         name,
+        until: new Date().toISOString(),
       },
-
     });
-    return {
-      statusCode: 200,
-      body: JSON.stringify(repo)
+
+    // There is an issue with GQL api, it doesn't return number of bytes
+    // per language, which makes it unusable really...
+    const languages = await  fetch(`https://api.github.com/repos/facebook/react/languages?access_token=${GITHUB_TOKEN}`).then(resp => resp.json());
+    const body = {
+      ...data.repository,
+      languages,
     }
+
+    return ({
+      statusCode: 200,
+      body: JSON.stringify(body),
+    });
   } catch (err) {
     console.log(err); // output to netlify function log
     return {

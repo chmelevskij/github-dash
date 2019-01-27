@@ -363,15 +363,10 @@ const repository = {
 };
 
 const resp = {
-  "data": {
     "data": {
-      repository,
+      ...repository,
     },
-    "loading": false,
-    "networkStatus": 7,
-    "stale": false
-  }
-}
+};
 
 describe('getRepository()', () => {
   it('gets the data from response', () => {
