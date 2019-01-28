@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import { Context, APIGatewayEvent } from 'aws-lambda';
 import { URL } from 'url';
 import ApolloClient, { gql } from 'apollo-boost';
-import * as R from 'ramda';
+import { mergeLanguages } from './utils';
 
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -98,24 +98,7 @@ export async function handler(event: APIGatewayEvent, context: Context) {
 
     ]);
 
-    const body = R.evolve(
-      {
-        languages: R.pipe(
-          R.prop('nodes'),
-          R.reduce((acc, { name, color }: { name: string, color: string }) => {
-            if (acc[name]) {
-              acc[name].color = color;
-              acc[name].size = languages[name];
-            } else {
-              acc[name] = {};
-              acc[name].color = color;
-              acc[name].size = languages[name];
-            }
-            return acc;
-          }, {}),
-        ),
-      }
-    )(data.repository);
+    const body = mergeLanguages(data.repository, languages);
 
     return ({
       statusCode: 200,
