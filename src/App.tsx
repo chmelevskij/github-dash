@@ -3,8 +3,10 @@ import axios from 'axios';
 import { useLoading } from '@swyx/hooks';
 import * as R from 'ramda';
 import styled from 'styled-components';
+import { Radar } from 'react-chartjs-2';
 
 import { getRepository, filterTotalCounts } from './utils';
+import { Dictionary } from 'ramda';
 
 interface NumberBadgeProps {
   number: number;
@@ -157,11 +159,17 @@ const LabelName = styled.span`
   font-weight: 600;
 `;
 
-const getPercentage = (v1: number, v2: number) => (v1 / (v1 + v2) * 100)
+const getPercentage = (v1: number, v2: number) => v1 || v2 ? (v1 / (v1 + v2) * 100) : 0;
+
+interface AppState extends Dictionary<any>{
+  languages?: { [key: string]: number}
+}
+
 function App() {
-  const [github, setGithub] = React.useState({});
+  const [github, setGithub] = React.useState<AppState>({});
   const totalCounts = filterTotalCounts(github)
   const labels = R.pathOr<[], Array<LabelNode>>([], ['labels', 'nodes'], github);
+  const languages = R.prop('languages', github);
   return (
     <div className="App">
       <Search onLoaded={setGithub} />
@@ -179,9 +187,11 @@ function App() {
       </Numbers>
       <Labels>
         {
+          // TODO: handle 0 and 0 case
           R.map(({ color, name, issues, pullRequests }) =>
             <Label key={name} backgroundColor={color}>
               <LabelName>
+                {/* TODO: handle contrast */}
                 {name}
               </LabelName>
               <LabelPrIssueContainer >
@@ -206,6 +216,33 @@ function App() {
             , labels)
         }
       </Labels>
+      <div>
+        {
+          languages &&
+          <Radar
+            options={{
+                legend: {
+                  display: false,
+                },
+                scale: {
+                  ticks: {
+                    callback: (value: number) => value + 'kb',
+                  }
+                }
+              }}
+            data={{
+              labels: R.keys(languages),
+              datasets: [{
+                data: R.pipe(R.values, R.pluck('size'), R.map(R.divide(R.__, 100)))(languages) as number[],
+                backgroundColor: 'hsla(2, 86%, 45%, 0.2)',
+                borderColor: 'hsla(2, 86%, 45%, 0.6)',
+                pointBackgroundColor: R.pipe(R.values, R.pluck('color'))(languages),
+                pointRadius: 5,
+              }],
+            }}
+          />
+        }
+      </div>
     </div>
   );
 }

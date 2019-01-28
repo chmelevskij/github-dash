@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 import { Context, APIGatewayEvent } from 'aws-lambda';
 import { URL } from 'url';
 import ApolloClient, { gql } from 'apollo-boost';
+import * as R from 'ramda';
 
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -65,9 +66,11 @@ query Github($owner: String!, $name: String!, $until: GitTimestamp!) {
     diskUsage
     createdAt
     updatedAt
-    primaryLanguage {
-      name
-      color
+    languages(first: 100) {
+      nodes {
+        color
+        name
+      }
     }
   }
 }
@@ -78,22 +81,41 @@ export async function handler(event: APIGatewayEvent, context: Context) {
     // TODO: validation
     const [, owner, name] = new URL(event.queryStringParameters.repo).pathname.split('/');
 
-    const { data } = await client.query({
-      query: githubQuery,
-      variables: {
-        owner,
-        name,
-        until: new Date().toISOString(),
-      },
-    });
+    const [{ data }, languages] = await Promise.all([
+      client.query<{ repository: any }>({
+        query: githubQuery,
+        variables: {
+          owner,
+          name,
+          until: new Date().toISOString(),
+        },
+      }),
 
-    // There is an issue with GQL api, it doesn't return number of bytes
-    // per language, which makes it unusable really...
-    const languages = await  fetch(`https://api.github.com/repos/facebook/react/languages?access_token=${GITHUB_TOKEN}`).then(resp => resp.json());
-    const body = {
-      ...data.repository,
-      languages,
-    }
+      // There is an issue with GQL api, it doesn't return number of bytes
+      // per language, which makes it unusable really...
+      fetch(`https://api.github.com/repos/${owner}/${name}/languages?access_token=${GITHUB_TOKEN}`)
+        .then(resp => resp.json()),
+
+    ]);
+
+    const body = R.evolve(
+      {
+        languages: R.pipe(
+          R.prop('nodes'),
+          R.reduce((acc, { name, color }: { name: string, color: string }) => {
+            if (acc[name]) {
+              acc[name].color = color;
+              acc[name].size = languages[name];
+            } else {
+              acc[name] = {};
+              acc[name].color = color;
+              acc[name].size = languages[name];
+            }
+            return acc;
+          }, {}),
+        ),
+      }
+    )(data.repository);
 
     return ({
       statusCode: 200,
