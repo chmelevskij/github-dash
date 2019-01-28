@@ -4,6 +4,7 @@ import { useLoading } from '@swyx/hooks';
 import * as R from 'ramda';
 import styled from 'styled-components';
 import { Radar } from 'react-chartjs-2';
+import Color from 'color';
 
 import { getRepository, filterTotalCounts } from './utils';
 import { Dictionary } from 'ramda';
@@ -155,7 +156,8 @@ const LabelBar = styled('div')<{ backgroundColor: string, width: number }>`
   background-color: ${({ backgroundColor }) => backgroundColor};
 `;
 
-const LabelName = styled.span`
+const LabelName = styled('span')<{ color: 'white' | 'black'}>`
+  color: ${({ color }) => color};
   font-weight: 600;
 `;
 
@@ -190,8 +192,9 @@ function App() {
           // TODO: handle 0 and 0 case
           R.map(({ color, name, issues, pullRequests }) =>
             <Label key={name} backgroundColor={color}>
-              <LabelName>
-                {/* TODO: handle contrast */}
+              <LabelName
+              color={Color('#' + color).isDark() ? 'white' : 'black'}
+              >
                 {name}
               </LabelName>
               <LabelPrIssueContainer >
