@@ -2,8 +2,6 @@ import fetch from 'node-fetch';
 import { Context, APIGatewayEvent } from 'aws-lambda';
 import { URL } from 'url';
 import ApolloClient, { gql } from 'apollo-boost';
-import { mergeLanguages } from './utils';
-
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
@@ -67,9 +65,12 @@ query Github($owner: String!, $name: String!, $until: GitTimestamp!) {
     createdAt
     updatedAt
     languages(first: 100) {
-      nodes {
-        color
-        name
+      edges {
+        node {
+					name
+          color
+        }
+        size
       }
     }
   }
@@ -81,28 +82,18 @@ export async function handler(event: APIGatewayEvent, context: Context) {
     // TODO: validation
     const [, owner, name] = new URL(event.queryStringParameters.repo).pathname.split('/');
 
-    const [{ data }, languages] = await Promise.all([
-      client.query<{ repository: any }>({
+    const { data } = await client.query<{ repository: any }>({
         query: githubQuery,
         variables: {
           owner,
           name,
           until: new Date().toISOString(),
         },
-      }),
-
-      // There is an issue with GQL api, it doesn't return number of bytes
-      // per language, which makes it unusable really...
-      fetch(`https://api.github.com/repos/${owner}/${name}/languages?access_token=${GITHUB_TOKEN}`)
-        .then(resp => resp.json()),
-
-    ]);
-
-    const body = mergeLanguages(data.repository, languages);
+      });
 
     return ({
       statusCode: 200,
-      body: JSON.stringify(body),
+      body: JSON.stringify(data.repository),
     });
   } catch (err) {
     console.log(err); // output to netlify function log
