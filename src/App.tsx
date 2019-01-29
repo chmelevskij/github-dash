@@ -3,25 +3,16 @@ import * as R from 'ramda';
 import styled from 'styled-components';
 import { useLoading } from '@swyx/hooks';
 import { BarLoader } from 'react-css-loaders';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 
 import { filterTotalCounts } from './utils';
 import { Dictionary } from 'ramda';
-import NumberBadge from './components/NumberBadge';
 import LabelInfo, { LabelInfoProps } from './components/LabelInfo';
 import Search from './components/SearchForm';
 import LanguagesRadar from './components/LanguageRadar';
 import CommitHistory from './components/CommitHistory';
-
-const Numbers = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, 170px);
-  grid-gap: 1rem;
-  justify-content: center;
-`;
-
-const Labels = styled(Numbers)`
-  grid-template-columns: repeat(auto-fit, 250px);
-`;
+import Numbers from './components/Numbers';
+import Labels from './components/Labels';
 
 interface Commit {
   additions: number;
@@ -61,6 +52,23 @@ type History = AppState["ref"]["target"]["history"];
 
 const notEmpty = R.pipe(R.isEmpty, R.not);
 
+const Header = () => (
+  <ul>
+    <li>
+      <Link to="/commits">Commits</Link>
+    </li>
+    <li>
+      <Link to="/totals">Totals</Link>
+    </li>
+    <li>
+      <Link to="/labels">Labels</Link>
+    </li>
+    <li>
+      <Link to="/languages">Languages</Link>
+    </li>
+  </ul>
+);
+
 const AppContainer = styled.div`
   min-width: 100vw;
   min-height: 100vh;
@@ -88,39 +96,23 @@ function App() {
   const commitLabels = R.map(R.pipe(R.prop<Commit, 'committedDate'>('committedDate'), R.split('T'), R.head))(history.nodes);
 
   return (
-    <AppContainer>
-      <Search
-        onLoaded={setGithub}
-        {...{ load, isLoading }}
-      />
-      {isLoading ? <BarLoader /> : null}
-      {notEmpty(history.nodes) && <CommitHistory {...{ additions, commitLabels, changedFiles, deletions }} />}
-      {notEmpty(totalCounts) &&
-        <Numbers>
-          {
-            R.pipe(
-              R.toPairs,
-              R.sortBy(R.path([1, 'totalCount']) as any),
-              R.map<[string, { totalCount: number }], JSX.Element>(([title, { totalCount }]) => (
-                <NumberBadge key={title} title={title} number={totalCount} />
-              )),
-              R.values
-            )(totalCounts)
-          }
-        </Numbers>
-      }
-      {notEmpty(labels) && <Labels>
-        {
-          R.map(({ color, name, issues, pullRequests }) =>
-            <LabelInfo key={name} {...{ color, name, issues, pullRequests }} />
-            , labels)
-        }
-      </Labels>
-      }
-      {notEmpty(languages.edges) &&
-        <LanguagesRadar languages={languages} />
-      }
-    </AppContainer>
+    <Router>
+      <AppContainer>
+        <Search
+          onLoaded={setGithub}
+          {...{ load, isLoading }}
+        />
+        <Header />
+        <Route
+          path="/commits"
+          render={() => notEmpty(history.nodes) ? <CommitHistory {...{ additions, commitLabels, changedFiles, deletions }} /> : null}
+        />
+        <Route path="/totals" component={() => notEmpty(totalCounts) ? <Numbers totalCounts={totalCounts}/> : null} />
+        <Route path="/labels" component={() => notEmpty(labels) ? <Labels labels={labels} /> : null} />
+        <Route path="/languages" component={() => notEmpty(languages.edges) ? <LanguagesRadar languages={languages} /> : null} />
+        {isLoading ? <BarLoader /> : null}
+      </AppContainer>
+    </Router>
   );
 }
 
