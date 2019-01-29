@@ -1,6 +1,8 @@
 import * as React from 'react';
 import * as R from 'ramda';
 import styled from 'styled-components';
+import { useLoading } from '@swyx/hooks';
+import { BarLoader } from 'react-css-loaders';
 
 import { filterTotalCounts } from './utils';
 import { Dictionary } from 'ramda';
@@ -56,8 +58,24 @@ const initialState: AppState = {
 };
 
 type History = AppState["ref"]["target"]["history"];
+
+const notEmpty = R.pipe(R.isEmpty, R.not);
+
+const AppContainer = styled.div`
+  min-width: 100vw;
+  min-height: 100vh;
+  display: grid;
+  grid-row-gap: 1rem;
+  grid-template-rows: 80px;
+  background-color: var(--colorBGMedium);
+  padding: 2rem;
+  box-sizing: border-box;
+`;
+
 function App() {
+  const [isLoading, load] = useLoading();
   const [github, setGithub] = React.useState<AppState>(initialState);
+
   const totalCounts = filterTotalCounts(github)
   const labels = R.pathOr<[], Array<LabelInfoProps>>([], ['labels', 'nodes'], github);
   const languages = R.prop('languages', github);
@@ -68,36 +86,41 @@ function App() {
   const changedFiles = R.pluck('changedFiles')(history.nodes);
   const deletions = R.pluck('deletions')(history.nodes);
   const commitLabels = R.map(R.pipe(R.prop<Commit, 'committedDate'>('committedDate'), R.split('T'), R.head))(history.nodes);
+
   return (
-    <div className="App">
-      <Search onLoaded={setGithub} />
-      {history.nodes.length > 0 && <CommitHistory {...{ additions, commitLabels, changedFiles, deletions }} />}
-      <Numbers>
-        {
-          R.pipe(
-            R.toPairs,
-            R.sortBy(R.path([1, 'totalCount']) as any),
-            R.map<[string, { totalCount: number }], JSX.Element>(([title, { totalCount }]) => (
-              <NumberBadge key={title} title={title} number={totalCount} />
-            )),
-            R.values
-          )(totalCounts)
-        }
-      </Numbers>
-      <Labels>
+    <AppContainer>
+      <Search
+        onLoaded={setGithub}
+        {...{ load, isLoading }}
+      />
+      {isLoading ? <BarLoader /> : null}
+      {notEmpty(history.nodes) && <CommitHistory {...{ additions, commitLabels, changedFiles, deletions }} />}
+      {notEmpty(totalCounts) &&
+        <Numbers>
+          {
+            R.pipe(
+              R.toPairs,
+              R.sortBy(R.path([1, 'totalCount']) as any),
+              R.map<[string, { totalCount: number }], JSX.Element>(([title, { totalCount }]) => (
+                <NumberBadge key={title} title={title} number={totalCount} />
+              )),
+              R.values
+            )(totalCounts)
+          }
+        </Numbers>
+      }
+      {notEmpty(labels) && <Labels>
         {
           R.map(({ color, name, issues, pullRequests }) =>
             <LabelInfo key={name} {...{ color, name, issues, pullRequests }} />
             , labels)
         }
       </Labels>
-      <div>
-        {
-          languages.edges.length > 0 &&
-          <LanguagesRadar languages={languages} />
-        }
-      </div>
-    </div>
+      }
+      {notEmpty(languages.edges) &&
+        <LanguagesRadar languages={languages} />
+      }
+    </AppContainer>
   );
 }
 

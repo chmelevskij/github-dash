@@ -3,11 +3,10 @@ import * as React from 'react';
 import * as R from 'ramda';
 import axios from 'axios';
 import styled from 'styled-components';
-import { useLoading } from '@swyx/hooks';
 
 import { getRepository } from '../utils';
 
-const SearchContainer = styled.div`
+const SearchForm = styled.form`
   align-self: center;
   justify-self: center;
   display: flex;
@@ -27,7 +26,7 @@ const SearchInput = styled.input.attrs({
 `;
 
 const SearchButton = styled.button.attrs({
-  type: 'button',
+  type: 'submit',
 })`
   border-top-right-radius: 1rem;
   border-bottom-right-radius: 1rem;
@@ -37,14 +36,15 @@ const SearchButton = styled.button.attrs({
 
 interface SearchProps {
   onLoaded: (github: any) => void;
+  isLoading: boolean;
+  load: (...args: any) => void;
 }
 
-const Search: React.SFC<SearchProps> = ({ onLoaded }) => {
-  const [isLoading, load] = useLoading();
+const Search: React.SFC<SearchProps> = ({ onLoaded, isLoading, load }) => {
   const [search, setSearch] = React.useState('');
 
-  const handleClick = (
-    e: React.MouseEvent<HTMLButtonElement>
+  const handleSubmit = (
+    e: React.FormEvent
   ) => {
     e.preventDefault();
     load(
@@ -54,15 +54,15 @@ const Search: React.SFC<SearchProps> = ({ onLoaded }) => {
   };
 
   return (
-    <SearchContainer>
+    <SearchForm onSubmit={handleSubmit} >
       <SearchInput
         placeholder="Github url..."
         value={search}
         onChange={({ target }) => setSearch(target.value)} />
-      <SearchButton onClick={handleClick}>
+      <SearchButton>
         {isLoading ? 'Loading...' : 'GO'}
       </SearchButton>
-    </SearchContainer>
+    </SearchForm>
   );
 }
 

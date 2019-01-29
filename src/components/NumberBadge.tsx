@@ -1,5 +1,6 @@
 import * as React from 'react';
 import styled from 'styled-components';
+import Card from './Card';
 
 interface NumberBadgeProps {
   number: number;
@@ -7,13 +8,9 @@ interface NumberBadgeProps {
   emoji?: string;
 }
 
-const BadgeContainer = styled.div`
-  border-radius: 5px;
-  box-shadow: 5px 5px 30px 6px var(--colorBGDark);
-  padding: 1rem;
+const BadgeContainer = styled(Card)`
   max-height: 50px;
-  background-color: var(--colorBGWhite);
-`
+`;
 
 const BadgeNumber = styled.div`
   font-size: 1.5rem;
