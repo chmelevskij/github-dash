@@ -8,6 +8,7 @@ import NumberBadge from './components/NumberBadge';
 import LabelInfo, { LabelInfoProps } from './components/LabelInfo';
 import Search from './components/SearchForm';
 import LanguagesRadar from './components/LanguageRadar';
+import CommitHistory from './components/CommitHistory';
 
 const Numbers = styled.div`
   display: grid;
@@ -20,19 +21,57 @@ const Labels = styled(Numbers)`
   grid-template-columns: repeat(auto-fit, 250px);
 `;
 
-
-interface AppState extends Dictionary<any> {
-  languages?: { [key: string]: number }
+interface Commit {
+  additions: number;
+  deletions: number;
+  changedFiles: number;
+  committedDate: string;
+  pushedDate: string;
 }
 
+interface AppState extends Dictionary<any> {
+  languages: {
+    edges: any[];
+  };
+  ref: {
+    target: {
+      history: {
+        nodes: Array<Commit>
+      };
+    };
+  };
+}
+
+const initialState: AppState = {
+  languages: {
+    edges: [],
+  },
+  ref: {
+    target: {
+      history: {
+        nodes: [],
+      },
+    },
+  },
+};
+
+type History = AppState["ref"]["target"]["history"];
 function App() {
-  const [github, setGithub] = React.useState<AppState>({});
+  const [github, setGithub] = React.useState<AppState>(initialState);
   const totalCounts = filterTotalCounts(github)
   const labels = R.pathOr<[], Array<LabelInfoProps>>([], ['labels', 'nodes'], github);
   const languages = R.prop('languages', github);
+
+  // Commits
+  const history = R.path<'ref', 'target', 'history', History>(['ref', 'target', 'history'], github);
+  const additions = R.pluck('additions')(history.nodes);
+  const changedFiles = R.pluck('changedFiles')(history.nodes);
+  const deletions = R.pluck('deletions')(history.nodes);
+  const commitLabels = R.map(R.pipe(R.prop<Commit, 'committedDate'>('committedDate'), R.split('T'), R.head))(history.nodes);
   return (
     <div className="App">
       <Search onLoaded={setGithub} />
+      {history.nodes.length > 0 && <CommitHistory {...{ additions, commitLabels, changedFiles, deletions }} />}
       <Numbers>
         {
           R.pipe(
@@ -54,7 +93,7 @@ function App() {
       </Labels>
       <div>
         {
-          languages &&
+          languages.edges.length > 0 &&
           <LanguagesRadar languages={languages} />
         }
       </div>
