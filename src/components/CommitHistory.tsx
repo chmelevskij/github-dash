@@ -12,6 +12,9 @@ interface CommitHistoryProps {
 const CommitHistory: React.SFC<CommitHistoryProps> = ({ commitLabels, additions, deletions, changedFiles }) => (
   <Card>
     <Line
+      options={{
+        responsive: true,
+      }}
       data={{
         labels: commitLabels,
         datasets: [

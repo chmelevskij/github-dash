@@ -24,7 +24,6 @@ const Numbers: React.SFC<NumbersProps> = ({ totalCounts }) => (
       R.map<[string, { totalCount: number }], JSX.Element>(([title, { totalCount }]) => (
         <NumberBadge key={title} title={title} number={totalCount} />
       )),
-      R.values
     )(totalCounts)
   }
 </NumbersContainer>);

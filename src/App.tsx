@@ -3,7 +3,7 @@ import * as R from 'ramda';
 import styled from 'styled-components';
 import { useLoading } from '@swyx/hooks';
 import { BarLoader } from 'react-css-loaders';
-import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, NavLink} from 'react-router-dom';
 
 import { filterTotalCounts } from './utils';
 import { Dictionary } from 'ramda';
@@ -52,32 +52,25 @@ type History = AppState["ref"]["target"]["history"];
 
 const notEmpty = R.pipe(R.isEmpty, R.not);
 
-const Header = () => (
-  <ul>
-    <li>
-      <Link to="/commits">Commits</Link>
-    </li>
-    <li>
-      <Link to="/totals">Totals</Link>
-    </li>
-    <li>
-      <Link to="/labels">Labels</Link>
-    </li>
-    <li>
-      <Link to="/languages">Languages</Link>
-    </li>
-  </ul>
-);
-
 const AppContainer = styled.div`
   min-width: 100vw;
   min-height: 100vh;
   display: grid;
   grid-row-gap: 1rem;
-  grid-template-rows: 80px;
+  grid-template-rows: 80px min-content;
   background-color: var(--colorBGMedium);
   padding: 2rem;
   box-sizing: border-box;
+`;
+
+const Header = styled.div`
+  max-width: 1440px;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  justify-self: center;
+  flex-wrap: wrap;
 `;
 
 function App() {
@@ -98,16 +91,21 @@ function App() {
   return (
     <Router>
       <AppContainer>
-        <Search
-          onLoaded={setGithub}
-          {...{ load, isLoading }}
-        />
-        <Header />
+        <Header>
+          <NavLink to="/commits">Commits</NavLink>
+          <NavLink to="/totals">Totals</NavLink>
+          <Search
+            onLoaded={setGithub}
+            {...{ load, isLoading }}
+          />
+          <NavLink to="/labels">Labels</NavLink>
+          <NavLink to="/languages">Languages</NavLink>
+        </Header>
         <Route
           path="/commits"
           render={() => notEmpty(history.nodes) ? <CommitHistory {...{ additions, commitLabels, changedFiles, deletions }} /> : null}
         />
-        <Route path="/totals" component={() => notEmpty(totalCounts) ? <Numbers totalCounts={totalCounts}/> : null} />
+        <Route path="/totals" component={() => notEmpty(totalCounts) ? <Numbers totalCounts={totalCounts} /> : null} />
         <Route path="/labels" component={() => notEmpty(labels) ? <Labels labels={labels} /> : null} />
         <Route path="/languages" component={() => notEmpty(languages.edges) ? <LanguagesRadar languages={languages} /> : null} />
         {isLoading ? <BarLoader /> : null}

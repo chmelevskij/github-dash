@@ -11,6 +11,7 @@ const LanguagesRadar: React.SFC<{ languages: any }> = ({ languages }) => (
   <Card>
     <Radar
       options={{
+        responsive: true,
         legend: {
           display: false,
         },

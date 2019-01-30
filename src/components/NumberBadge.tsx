@@ -8,10 +8,6 @@ interface NumberBadgeProps {
   emoji?: string;
 }
 
-const BadgeContainer = styled(Card)`
-  max-height: 50px;
-`;
-
 const BadgeNumber = styled.div`
   font-size: 1.5rem;
   font-weight: 200;
@@ -21,11 +17,14 @@ const BadgeTitle = styled.div`
   opacity: 0.5;
 `;
 
+const NumberCard = styled(Card)`
+  width: 100%;
+`;
 const NumberBadge: React.SFC<NumberBadgeProps> = ({ title, number }) => (
-  <BadgeContainer>
+  <NumberCard>
     <BadgeNumber>{number}</BadgeNumber>
     <BadgeTitle>{title}</BadgeTitle>
-  </BadgeContainer>
+  </NumberCard>
 );
 
 export default NumberBadge;
