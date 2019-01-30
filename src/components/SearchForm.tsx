@@ -43,10 +43,10 @@ interface SearchProps {
   onLoaded: (github: any) => void;
   isLoading: boolean;
   load: (...args: any) => void;
-  onError: React.Dispatch<React.SetStateAction<never[]>>;
+  onError: (error: any) => void;
 }
 
-const Search: React.SFC<SearchProps> = ({ onLoaded, isLoading, load }) => {
+const Search: React.SFC<SearchProps> = ({ onLoaded, isLoading, onError, load }) => {
   const [search, setSearch] = React.useState('');
 
   const handleSubmit = (
@@ -55,7 +55,8 @@ const Search: React.SFC<SearchProps> = ({ onLoaded, isLoading, load }) => {
     e.preventDefault();
     load(
       axios.get(`/.netlify/functions/github?repo=${search}`)
-        .then(R.pipe(getRepository, onLoaded)) // TODO: handle bad on client
+        .then(R.pipe(getRepository, onLoaded))
+        .catch(R.pipe(R.path(['response', 'data']), onError)) // TODO: handle bad on client
     );
   };
 

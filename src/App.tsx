@@ -99,15 +99,21 @@ function App() {
           <NavLink to="/">Commits</NavLink>
           <NavLink to="/totals">Totals</NavLink>
           <Search
-            onError={setErrors}
-            onLoaded={setGithub}
+            onError={(error) =>{
+              setGithub(initialState);
+              setErrors(errors.concat(error))
+            }}
+            onLoaded={(github) =>{
+              setGithub(github);
+              setErrors([]);
+            }}
             {...{ load, isLoading }}
           />
           <NavLink to="/labels">Labels</NavLink>
           <NavLink to="/languages">Languages</NavLink>
         </Header>
         {notEmpty(errors) && <div>
-          {R.map((msg) => <Error>msg</Error>, errors)}
+          {R.map(({msg}) => <Error key={msg}>{msg}</Error>, errors)}
         </div>}
         {isLoading
           ? <BarLoader />
