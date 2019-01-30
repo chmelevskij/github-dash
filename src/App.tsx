@@ -3,11 +3,11 @@ import * as R from 'ramda';
 import styled from 'styled-components';
 import { useLoading } from '@swyx/hooks';
 import { BarLoader } from 'react-css-loaders';
-import { BrowserRouter as Router, Route, NavLink} from 'react-router-dom';
+import { BrowserRouter as Router, Route, NavLink } from 'react-router-dom';
 
 import { filterTotalCounts } from './utils';
 import { Dictionary } from 'ramda';
-import LabelInfo, { LabelInfoProps } from './components/LabelInfo';
+import { LabelInfoProps } from './components/LabelInfo';
 import Search from './components/SearchForm';
 import LanguagesRadar from './components/LanguageRadar';
 import CommitHistory from './components/CommitHistory';
@@ -73,9 +73,13 @@ const Header = styled.div`
   flex-wrap: wrap;
 `;
 
+const Error = styled.p`
+  color: red;
+`;
 function App() {
   const [isLoading, load] = useLoading();
   const [github, setGithub] = React.useState<AppState>(initialState);
+  const [errors, setErrors] = React.useState([]);
 
   const totalCounts = filterTotalCounts(github)
   const labels = R.pathOr<[], Array<LabelInfoProps>>([], ['labels', 'nodes'], github);
@@ -95,20 +99,28 @@ function App() {
           <NavLink to="/commits">Commits</NavLink>
           <NavLink to="/totals">Totals</NavLink>
           <Search
+            onError={setErrors}
             onLoaded={setGithub}
             {...{ load, isLoading }}
           />
           <NavLink to="/labels">Labels</NavLink>
           <NavLink to="/languages">Languages</NavLink>
         </Header>
-        <Route
-          path="/commits"
-          render={() => notEmpty(history.nodes) ? <CommitHistory {...{ additions, commitLabels, changedFiles, deletions }} /> : null}
-        />
-        <Route path="/totals" component={() => notEmpty(totalCounts) ? <Numbers totalCounts={totalCounts} /> : null} />
-        <Route path="/labels" component={() => notEmpty(labels) ? <Labels labels={labels} /> : null} />
-        <Route path="/languages" component={() => notEmpty(languages.edges) ? <LanguagesRadar languages={languages} /> : null} />
-        {isLoading ? <BarLoader /> : null}
+        {notEmpty(errors) && <div>
+          {R.map((msg) => <Error>msg</Error>, errors)}
+        </div>}
+        {isLoading
+          ? <BarLoader />
+          : <React.Fragment>
+            <Route
+              path="/commits"
+              render={() => notEmpty(history.nodes) ? <CommitHistory {...{ additions, commitLabels, changedFiles, deletions }} /> : null}
+            />
+            <Route path="/totals" component={() => notEmpty(totalCounts) ? <Numbers totalCounts={totalCounts} /> : null} />
+            <Route path="/labels" component={() => notEmpty(labels) ? <Labels labels={labels} /> : null} />
+            <Route path="/languages" component={() => notEmpty(languages.edges) ? <LanguagesRadar languages={languages} /> : null} />
+          </React.Fragment>
+        }
       </AppContainer>
     </Router>
   );

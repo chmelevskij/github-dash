@@ -24,3 +24,4 @@ Features include:
 4. Paginating through the data like commit history.
 5. Some more tests.
 6. Proxying the github graphql api with limited subset of schema.
+7. Better handling of error messages, there none pretty much.

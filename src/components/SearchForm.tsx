@@ -14,7 +14,8 @@ const SearchForm = styled.form`
 `;
 
 const SearchInput = styled.input.attrs({
-  type: 'text',
+  type: 'url',
+  pattern: 'https://github.com/.*'
 })`
   border: none;
   padding: 1rem;
@@ -23,6 +24,10 @@ const SearchInput = styled.input.attrs({
   border-bottom-left-radius: 1rem;
   font-weight: 200;
   letter-spacing: 2px;
+
+  &:invalid {
+    border: red solid;
+  }
 `;
 
 const SearchButton = styled.button.attrs({
@@ -38,6 +43,7 @@ interface SearchProps {
   onLoaded: (github: any) => void;
   isLoading: boolean;
   load: (...args: any) => void;
+  onError: React.Dispatch<React.SetStateAction<never[]>>;
 }
 
 const Search: React.SFC<SearchProps> = ({ onLoaded, isLoading, load }) => {
