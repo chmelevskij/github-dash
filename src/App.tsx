@@ -5,7 +5,7 @@ import { useLoading } from '@swyx/hooks';
 import { BarLoader } from 'react-css-loaders';
 import { BrowserRouter as Router, Route, NavLink } from 'react-router-dom';
 
-import { filterTotalCounts } from './utils';
+import { filterTotalCounts, notEmpty } from './utils';
 import { Dictionary } from 'ramda';
 import { LabelInfoProps } from './components/LabelInfo';
 import Search from './components/SearchForm';
@@ -50,7 +50,6 @@ const initialState: AppState = {
 
 type History = AppState["ref"]["target"]["history"];
 
-const notEmpty = R.pipe(R.isEmpty, R.not);
 
 const AppContainer = styled.div`
   min-width: 100vw;
@@ -86,7 +85,7 @@ function App() {
   const languages = R.prop('languages', github);
 
   // Commits
-  const history = R.path<'ref', 'target', 'history', History>(['ref', 'target', 'history'], github);
+  const history = R.pathOr<{nodes: []}, History>({ nodes: [] }, ['ref', 'target', 'history'], github);
   const additions = R.pluck('additions')(history.nodes);
   const changedFiles = R.pluck('changedFiles')(history.nodes);
   const deletions = R.pluck('deletions')(history.nodes);
