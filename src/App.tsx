@@ -96,7 +96,7 @@ function App() {
     <Router>
       <AppContainer>
         <Header>
-          <NavLink to="/commits">Commits</NavLink>
+          <NavLink to="/">Commits</NavLink>
           <NavLink to="/totals">Totals</NavLink>
           <Search
             onError={setErrors}
@@ -113,7 +113,8 @@ function App() {
           ? <BarLoader />
           : <React.Fragment>
             <Route
-              path="/commits"
+              path="/"
+              exact
               render={() => notEmpty(history.nodes) ? <CommitHistory {...{ additions, commitLabels, changedFiles, deletions }} /> : null}
             />
             <Route path="/totals" component={() => notEmpty(totalCounts) ? <Numbers totalCounts={totalCounts} /> : null} />
